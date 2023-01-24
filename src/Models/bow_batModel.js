@@ -1,7 +1,10 @@
 const mongoose = require("mongoose")
 
 const bow_batSchema = new mongoose.Schema({
-
+    userId: {
+        type: String,
+        require: true
+    },
     bat_hand: {
         type: String,
         require: true

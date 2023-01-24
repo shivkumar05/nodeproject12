@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 
 const userProfile = new mongoose.Schema({
+    userId: {type: String, require :true},
     image: { type: String, require: true },
     dob: { type: String, require: true },
     gender: { type: String, require: true },

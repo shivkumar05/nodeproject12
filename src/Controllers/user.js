@@ -1,3 +1,4 @@
+const moment = require('moment');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const tagModel = require("../Models/tagModel");
@@ -13,7 +14,6 @@ const categoryModel = require("../Models/categoryModel");
 const powerTestModel = require("../Models/power_testModel");
 const readinessSurveyModel = require("../Models/readinessSurvey");
 const strengthTestModel = require("../Models/strength_testModel");
-const { default: mongoose } = require("mongoose");
 
 //==========================[user register]==============================
 const createUser = async function (req, res) {
@@ -45,7 +45,7 @@ const userLogin = async function (req, res) {
         let { email, password } = data;
 
         let user = await userModel.findOne({ email: email })
-        // console.log(user._id)
+
         if (!user) {
             return res.status(400).send({
                 status: false,
@@ -61,15 +61,15 @@ const userLogin = async function (req, res) {
             })
         };
 
-        let UserProfile = await profileModel.findOne({ email: email }).select({_id:0, createdAt:0, updatedAt:0, __v:0});
+        let UserProfile = await profileModel.findOne({ userId : user._id }).select({ _id: 0, createdAt: 0, updatedAt: 0, __v: 0 });
         let type = UserProfile ? "Yes" : "No";
         user.user_details_submit = type;
 
         let token = jwt.sign({
             userId: user._id,
         }, "project")
-        
-        let Questions = await bow_batModel.findOne().select({_id:0, createdAt:0, updatedAt:0, __v:0});
+
+        let Questions = await bow_batModel.findOne({ userId : user._id }).select({ _id: 0, createdAt: 0, updatedAt: 0, __v: 0 });
         user.userQuestion = Questions;
 
         return res.status(200).send({
@@ -102,7 +102,10 @@ const userLogin = async function (req, res) {
 const bow_bat = async function (req, res) {
     try {
         let data = req.body;
-        data = JSON.parse(JSON.stringify(data));
+        let userid = req.params.userId;
+
+        let { bat_hand, bowl_hand, batting_order, bowling_order, wicket_keeper, userId} = data
+        data.userId = userid;
 
         const actionCreated = await bow_batModel.create(data)
 
@@ -295,8 +298,46 @@ const createRoutine = async function (req, res) {
         if (await routineModel.findOne({ date: date, time: time }))
             return res.status(400).send({ status: false, message: "You already have a routine set for this time" })
 
+        // const currentTime = moment();
+        // console.log(currentTime)
+
+        // const routineTime = moment(req.body);
+        // console.log(routineTime, "1111111")
+
+        // const blockTime = moment(currentTime).add(29, 'minutes');
+        // console.log(blockTime, "22222222222")
+        // data.time = blockTime;
+
+        // if (routineTime.isBefore(blockTime)) {
+        //     return res.status(400).send({ status: false, message: "Cannot set routine for next 30 minutes" });
+        // }
+
+        let x = {
+            slotInterval: 30,
+            openTime: '21:00',
+            closeTime: '05:00'
+          };
+          
+          //Format the time
+          let startTime = moment(x.openTime, "HH:mm");
+          
+          //Format the end time and the next day to it 
+          let endTime = moment(x.closeTime, "HH:mm").add(1, 'days');
+          
+          //Times
+          let allTimes = [];
+          
+          //Loop over the times - only pushes time with 30 minutes interval
+          while (startTime < endTime) {
+            //Push times
+            allTimes.push(startTime.format("HH:mm")); 
+            //Add interval of 30 minutes
+            startTime.add(x.slotInterval, 'minutes');
+          }
+          
+          console.log(allTimes);
+          
         const routinesCreated = await routineModel.create(data);
-        
         return res.status(201).send({
             message: "Success",
             data: routinesCreated

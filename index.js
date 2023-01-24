@@ -12,6 +12,7 @@ const uploadDevice = require("./src/Models/uploadDevice");
 const sncPlayerProfile = require("./src/Models/sncPlayerProfile");
 const onGoingDrillModel = require("./src/Models/onGoingDrillModel");
 const recommendationModel = require("./src/Models/recommendationModel");
+const userModel = require("./src/Models/userModel");
 const port = process.env.PORT || 3000
 
 app.use(bodyParser.json());
@@ -40,9 +41,13 @@ app.post("/:userId/userProfile", commnMid.jwtValidation, commnMid.authorization,
     try {
         let data = req.body;
         let file = req.file;
+        let userid = req.params.userId;
+    
+        let { dob, gender, email, contact, height, weight, image, userId } = data
 
-        let { dob, gender, email, contact, height, weight, image } = data
-        data.image = `/image/${file.filename}`
+        data.image = `/image/${file.filename}`;
+        data.userId = userid;
+
         const userCreated = await userprofile.create(data)
         return res.status(201).send({
             data: userCreated
